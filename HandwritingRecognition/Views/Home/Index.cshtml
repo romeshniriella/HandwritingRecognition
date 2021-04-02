@@ -4,17 +4,22 @@
 
 <div class="text-center">
     <p>Write a number [0-9] in the box.</p>
+
     <canvas id="canvas" width="256" height="256" style="border:2px solid black"></canvas>
+    <canvas id="scoresBarChart" width="400" height="200"></canvas>
     <br />
     <p id="prediction" class="h1">?</p>
-    <div>
-        <pre id="scores"></pre>
+    <div style="width:120px">
+        <ol>
+            @for (int i = 0; i < 10; i++)
+            {
+                <li><button class="btn btn-success correctNumber" data-number="@i">&nbsp;&nbsp; @i &nbsp;&nbsp;</button></li>
+            }
+        </ol>
     </div>
     <button id="clearArea" class="btn btn-secondary">Clear</button>
     <button id="check" class="btn btn-success">Check</button>
 </div>
-
-
+<div id="pixies"></div>
 <script type="text/javascript">
-
 </script>

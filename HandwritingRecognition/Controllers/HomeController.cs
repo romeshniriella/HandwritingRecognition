@@ -1,16 +1,16 @@
-﻿using System;
+﻿using HandwritingRecognition.Models;
+using HandwritingRecognitionML.ConsoleApp;
+using HandwritingRecognitionML.Model;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.ML;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Text;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
-using HandwritingRecognition.Models;
-using HandwritingRecognitionML.Model;
-using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.ML;
 
 namespace HandwritingRecognition.Controllers
 {
@@ -46,6 +46,21 @@ namespace HandwritingRecognition.Controllers
         [HttpPost]
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public IActionResult CorrectResult(int number, string pixelValues)
+        {
+            if (string.IsNullOrEmpty(pixelValues))
+            {
+                return BadRequest(new { prediction = "-", dataset = string.Empty });
+            }
+
+            ModelBuilder.AppendTrainingData(number, pixelValues);
+
+            return Ok();
+        }
+
+        [HttpPost]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public IActionResult Upload(string base64Image)
         {
             if (string.IsNullOrEmpty(base64Image))
@@ -58,8 +73,8 @@ namespace HandwritingRecognition.Controllers
             _logger.LogInformation($"Number {result.Prediction} is returned.");
             return Ok(new
             {
-                prediction = result.Prediction, 
-                scores = FormatScores(result.Score), 
+                prediction = result.Prediction,
+                scores = FormatScores(result.Score),
                 pixelValues = string.Join(",", pixelValues)
             });
         }
@@ -99,21 +114,35 @@ namespace HandwritingRecognition.Controllers
             return result;
         }
 
-        private static string FormatScores(IReadOnlyList<float> scores)
+        private static List<ClassificationScore> FormatScores(IReadOnlyList<float> scores)
         {
             // order is: 0,7,4,6,2,5,8,1,9,3 (the order of labels appear in the training data set)
-            var sb = new StringBuilder();
-            sb.Append($"0: {scores[0]:N3}").AppendLine();
-            sb.Append($"1: {scores[7]:N3}").AppendLine();
-            sb.Append($"2: {scores[4]:N3}").AppendLine();
-            sb.Append($"3: {scores[9]:N3}").AppendLine();
-            sb.Append($"4: {scores[2]:N3}").AppendLine();
-            sb.Append($"5: {scores[5]:N3}").AppendLine();
-            sb.Append($"6: {scores[3]:N3}").AppendLine();
-            sb.Append($"7: {scores[1]:N3}").AppendLine();
-            sb.Append($"8: {scores[6]:N3}").AppendLine();
-            sb.Append($"9: {scores[8]:N3}");
-            return sb.ToString();
+            return new List<ClassificationScore>
+            {
+                new ClassificationScore(0, scores[0]),
+                new ClassificationScore(1, scores[7]),
+                new ClassificationScore(2, scores[4]),
+                new ClassificationScore(3, scores[9]),
+                new ClassificationScore(4, scores[2]),
+                new ClassificationScore(5, scores[5]),
+                new ClassificationScore(6, scores[3]),
+                new ClassificationScore(7, scores[1]),
+                new ClassificationScore(8, scores[6]),
+                new ClassificationScore(9, scores[8]),
+            };
         }
+    }
+
+    public class ClassificationScore
+    {
+        public ClassificationScore(int digit, float score)
+        {
+            this.Digit = digit;
+            this.Score = score;
+        }
+
+        public int Digit { get; set; }
+
+        public float Score { get; set; }
     }
 }

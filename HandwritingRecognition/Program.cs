@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Hosting;
+using Serilog;
 
 namespace HandwritingRecognition
 {
@@ -7,6 +8,11 @@ namespace HandwritingRecognition
     {
         public static void Main(string[] args)
         {
+            Log.Logger = new LoggerConfiguration()
+              .WriteTo.Console()
+              .WriteTo.Seq("http://localhost:5341")
+              .CreateLogger();
+
             CreateHostBuilder(args).Build().Run();
         }
 
